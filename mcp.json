@@ -8,7 +8,9 @@
         "--from",
         "ctxd",
         "ctxd-mcp"
-      ]
+      ],
+      "type": "stdio"
     }
-  }
+  },
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json"
 }
