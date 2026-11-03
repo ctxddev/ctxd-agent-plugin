@@ -41,6 +41,24 @@ The bridge uses local standard input/output (stdio). No hosted account or API ke
 
 The package is free and MIT-licensed: https://github.com/ctxd-dev/ctxd/blob/main/LICENSE
 
+## Install in Claude Code
+
+After setting up the source and tracker above, run on your Linux workstation as
+the same user, with `uv` available:
+
+```bash
+claude plugin marketplace add ctxddev/ctxd-agent-plugin
+claude plugin install ctxd@ctxd-plugins
+```
+
+Restart Claude Code so it loads the plugin. Use its `tree` tool, then read a
+returned source path with `read` or `read_lines`. After editing a source, wait for
+synchronization and read it again.
+
+This is the Team CTXD marketplace hosted in this repository. Installing the
+plugin connects Claude Code to your existing local ctxd store; it does not select
+source folders or start the tracker for you.
+
 ## Install in Gemini CLI
 
 After setting up the source and tracker above, run on your workstation as the same user:

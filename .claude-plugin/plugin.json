@@ -1,0 +1,21 @@
+{
+  "name": "ctxd",
+  "version": "0.1.0",
+  "description": "Open-source context infrastructure for agents. Sync changing source content, inspect paths and read it through Python, CLI or MCP.",
+  "author": {
+    "name": "Team CTXD",
+    "email": "hi@ctxd.dev",
+    "url": "https://ctxd.dev"
+  },
+  "homepage": "https://ctxd.dev",
+  "license": "MIT",
+  "keywords": [
+    "ctxd",
+    "context",
+    "source",
+    "mcp"
+  ],
+  "repository": "https://github.com/ctxddev/ctxd-agent-plugin",
+  "mcpServers": "./mcp.json",
+  "icon": "./icon.png"
+}

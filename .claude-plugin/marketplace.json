@@ -1,0 +1,15 @@
+{
+  "name": "ctxd-plugins",
+  "owner": {
+    "name": "Team CTXD",
+    "email": "hi@ctxd.dev"
+  },
+  "plugins": [
+    {
+      "name": "ctxd",
+      "source": "./",
+      "description": "Open-source context infrastructure for agents. Sync changing source content, inspect paths and read it through Python, CLI or MCP."
+    }
+  ],
+  "description": "ctxd source access for Claude Code"
+}
