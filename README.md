@@ -57,8 +57,53 @@ https://github.com/ctxddev/ctxd-agent-plugin
 
 The plugin uses `uvx` to start the local ctxd MCP bridge. It needs the ctxfs store and tracker configured under the same user account.
 
+## Run in Docker
+
+The container packages ctxd 0.1.16 from PyPI with Python 3.12. It starts ctxfs,
+synchronizes the mounted source folder, starts the tracker and serves MCP over
+stdio. The tracker checks for source changes every ten seconds plus processing
+time. The context store is rebuilt when a new container starts.
+
+On your Linux workstation as a user with Docker access, build the image:
+
+```bash
+docker build -t ctxd-mcp https://github.com/ctxddev/ctxd-agent-plugin.git
+```
+
+Use this configuration in your MCP client on that workstation. Replace
+`/absolute/path/to/source` with a folder readable by the container's user
+(UID 10001). Choose only source material you want the client to access.
+
+```json
+{
+  "mcpServers": {
+    "ctxd": {
+      "command": "docker",
+      "args": [
+        "run", "--rm", "-i", "--init", "--network=none", "--cap-drop=ALL",
+        "--security-opt=no-new-privileges",
+        "--mount", "type=bind,src=/absolute/path/to/source,dst=/sources,readonly",
+        "ctxd-mcp"
+      ]
+    }
+  }
+}
+```
+
+Start with `tree`, then read a returned path. Source files are mounted read-only;
+the container makes no network requests at runtime. The MCP client can send read
+content to its configured model provider. The tracker accepts its documented
+text formats; it does not ingest arbitrary file formats.
+
+The six tools listed above work in this package. The package also advertises
+`grep`, but calling it fails because `CtxfsFiles.grep` is missing in 0.1.16.
+Use Python or the CLI for exact text search. No remote MCP endpoint or credentials
+are required by this container.
+
 ## Support and privacy
 
 For setup questions, contact [hi@ctxd.dev](mailto:hi@ctxd.dev) or open an issue in this repository.
+
+Report security issues privately to [hi@ctxd.dev](mailto:hi@ctxd.dev).
 
 [Privacy policy](PRIVACY.md)
