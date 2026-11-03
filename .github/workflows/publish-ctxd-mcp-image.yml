@@ -1,0 +1,63 @@
+name: Publish ctxd MCP image
+
+"on":
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: ctxd-mcp-image
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'ctxddev/ctxd-agent-plugin' && github.actor == 'ctxddev'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      SOURCE_REVISION: 9f81d373cc5d0eb3aaa0472ad483a924d9865bb1
+      SERVER_NAME: io.github.ctxddev/ctxd
+      SERVER_VERSION: 0.1.16-1
+    steps:
+      - name: Check out the reviewed container source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 9f81d373cc5d0eb3aaa0472ad483a924d9865bb1
+          persist-credentials: false
+      - name: Build the image
+        shell: bash
+        run: |
+          set -euo pipefail
+          image="ghcr.io/ctxddev/ctxd-mcp:${SERVER_VERSION}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          docker build --platform linux/amd64 \
+            --label "io.modelcontextprotocol.server.name=${SERVER_NAME}" \
+            --label "org.opencontainers.image.source=https://github.com/ctxddev/ctxd-agent-plugin" \
+            --label "org.opencontainers.image.revision=${SOURCE_REVISION}" \
+            --label "org.opencontainers.image.version=${SERVER_VERSION}" \
+            --tag "$image" .
+          echo "CTXD_IMAGE=$image" >> "$GITHUB_ENV"
+      - name: Push to GitHub Container Registry
+        shell: bash
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker push "$CTXD_IMAGE"
+          ref="$(docker image inspect "$CTXD_IMAGE" --format '{{index .RepoDigests 0}}')"
+          test -n "$ref"
+          echo "CTXD_IMAGE_DIGEST_REF=$ref" >> "$GITHUB_ENV"
+          printf 'Image: `%s`\n\nDigest reference: `%s`\n' "$CTXD_IMAGE" "$ref" >> "$GITHUB_STEP_SUMMARY"
+          docker logout ghcr.io
+      - name: Check anonymous access
+        shell: bash
+        run: |
+          set -euo pipefail
+          if docker manifest inspect "$CTXD_IMAGE_DIGEST_REF" >/dev/null 2>&1; then
+            echo 'Anonymous image access passed. Official MCP Registry publication has not run.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'Image pushed. Anonymous access is unavailable. Set this package to Public in its settings, then verify the digest before Registry publication.' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
