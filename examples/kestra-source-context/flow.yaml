@@ -1,0 +1,68 @@
+id: ctxd_source_context
+namespace: examples.ctxd
+description: Synchronize a disposable source, change it, and verify the next ctxd read.
+
+tasks:
+  - id: verify_source_change
+    type: io.kestra.plugin.scripts.python.Script
+    containerImage: python:3.12
+    pythonVersion: "3.12"
+    packageManager: PIP
+    taskRunner:
+      type: io.kestra.plugin.scripts.runner.docker.Docker
+    beforeCommands:
+      - pip install ctxd
+    outputFiles:
+      - result.json
+    script: |
+      import json
+      import subprocess
+      import sys
+      import tempfile
+      from importlib.metadata import version
+      from pathlib import Path
+
+      from ctxd import Client
+      from ctxd.folders import add_folder
+
+      def command(*args):
+          subprocess.run(args, check=True, timeout=60)
+
+      command("ctxd", "backend", "set", "ctxfs")
+      with tempfile.TemporaryDirectory(prefix="ctxd-kestra-source-") as directory:
+          source = Path(directory) / "release-checklist.md"
+          before = "Release checklist\nRun the test suite before deployment.\n"
+          after = "Release checklist\nRun the test suite and linter before deployment.\n"
+          source.write_text(before, encoding="utf-8")
+          folder = add_folder(directory, name="ReleaseDocs")
+          path = f"{folder.prefix}/{source.name}"
+          client = Client(backend="ctxfs")
+
+          def sync():
+              command(sys.executable, "-m", "ctxd.tracker_service", "sync-once")
+
+          def read():
+              return client.files.read_lines(path, start_line=1, end_line=2).lines
+
+          sync()
+          first_read = read()
+          assert first_read == before.splitlines(), first_read
+
+          source.write_text(after, encoding="utf-8")
+          before_sync = read()
+          assert before_sync == first_read, before_sync
+          sync()
+          changed_read = read()
+          assert changed_read == after.splitlines(), changed_read
+          assert changed_read != first_read
+
+          result = {
+              "ctxd_version": version("ctxd"),
+              "source_path": path,
+              "first_read": first_read,
+              "read_before_second_sync": before_sync,
+              "changed_read": changed_read,
+              "passed": True,
+          }
+          Path("result.json").write_text(json.dumps(result, indent=2) + "\n")
+          print(json.dumps(result))
