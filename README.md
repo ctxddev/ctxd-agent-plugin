@@ -62,7 +62,9 @@ The plugin uses `uvx` to start the local ctxd MCP bridge. It needs the ctxfs sto
 The container packages ctxd 0.1.16 from PyPI with Python 3.12. It starts ctxfs,
 synchronizes the mounted source folder, starts the tracker and serves MCP over
 stdio. The tracker checks for source changes every ten seconds plus processing
-time. The context store is rebuilt when a new container starts.
+time. The context store is rebuilt when a new container starts. Paths keep the
+`local-files/source/` prefix across containers, including gateways that start
+a fresh process for each tool call.
 
 On your Linux workstation as a user with Docker access, build the image:
 
