@@ -1,0 +1,15 @@
+id = "mcp-server-ctxd"
+name = "ctxd MCP Server"
+description = "Context infrastructure between agents and data: inspect paths and read synchronized source content."
+version = "0.1.0"
+schema_version = 1
+authors = ["Team CTXD <hi@ctxd.dev>"]
+repository = "https://github.com/ctxddev/ctxd-agent-plugin"
+
+[[capabilities]]
+kind = "process:exec"
+command = "*"
+args = ["--version"]
+
+[context_servers.mcp-server-ctxd]
+name = "ctxd MCP Server"
